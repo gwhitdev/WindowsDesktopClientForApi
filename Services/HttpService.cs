@@ -21,7 +21,7 @@ namespace WindowsDesktopClientForApi.Services
 
         private static readonly HttpClient client;
         private List<Ingredient> searchResults;
-        public Ingredient ingredient { get; set; }
+        private Ingredient ingredient;
 
         static HttpService() //Initialise the HttpClient
         {
