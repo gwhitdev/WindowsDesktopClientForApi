@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using WindowsDesktopClientForApi.Models;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using WindowsDesktopClientForApi.Interfaces;
 /// <summary>
 ///  Creates an instance of a HttpClient to send GET requests to FamilyMeals API.
 ///  Provides a GetIngredients and GetIngredient method
@@ -16,22 +17,17 @@ using System.Linq;
 
 namespace WindowsDesktopClientForApi.Services
 {
-    class HttpService
+    class IngredientsHttpService : IIngredientsService
     {
 
-        private static readonly HttpClient client;
-        private List<Ingredient> searchResults;
-        private Ingredient ingredient;
+        private readonly HttpClient _client;
+        private List<Ingredient> SearchResults { get; set; }
+        private Ingredient Ingredient { get; set; } 
 
-        static HttpService() //Initialise the HttpClient
+        public IngredientsHttpService(HttpClient client) 
         {
-            // These values must not be changed later in the class
-            client = new HttpClient();
-            client.BaseAddress = new Uri("https://familymealsapi.azurewebsites.net/api/");
-            client.Timeout = TimeSpan.FromSeconds(5);
-            client.MaxResponseContentBufferSize = 10000;
-            client.DefaultRequestHeaders.Add("User-Agent", "WinFormTestApp");
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // Injected HttpClient
+            _client = client;
         }
 
         /// <summary>
@@ -45,25 +41,25 @@ namespace WindowsDesktopClientForApi.Services
 
             try
             {
-                HttpResponseMessage response = await client.GetAsync(url);
+                HttpResponseMessage response = await _client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
                 var result = await response.Content.ReadAsStringAsync();
                 JArray convertedResult = JArray.Parse(result);
                 IList<JToken> results = convertedResult[0]["data"]["ingredients"].Children().ToList();
                 // serialize Json results into .Net objects
-                searchResults = new List<Ingredient>();
+                SearchResults = new List<Ingredient>();
                 foreach (JToken searchResult in results)
                 {
                     Ingredient ingredient = searchResult.ToObject<Ingredient>();
-                    searchResults.Add(ingredient);
+                    SearchResults.Add(ingredient);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            yield return searchResults;
+            yield return SearchResults;
         }
 
         /// <summary>
@@ -77,7 +73,7 @@ namespace WindowsDesktopClientForApi.Services
   
             try
             {
-                HttpResponseMessage response = await client.GetAsync(url);
+                HttpResponseMessage response = await _client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 var result = await response.Content.ReadAsStringAsync();
 
@@ -88,7 +84,7 @@ namespace WindowsDesktopClientForApi.Services
                 List<JToken> results = convertedResult[0]["data"]["ingredients"].Children().ToList();
 
                 // Converts the specific ingredient to an Ingredient object
-                ingredient = results[0].ToObject<Ingredient>();
+                Ingredient = results[0].ToObject<Ingredient>();
 
             }
             catch (Exception ex)
@@ -96,7 +92,7 @@ namespace WindowsDesktopClientForApi.Services
                 Console.WriteLine(ex.Message);
             }
  
-            return ingredient;
+            return Ingredient;
         }
     }
 }

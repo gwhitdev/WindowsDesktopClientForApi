@@ -9,19 +9,23 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsDesktopClientForApi.Models;
 using WindowsDesktopClientForApi.Services;
+using WindowsDesktopClientForApi.Interfaces;
 
 namespace WindowsDesktopClientForApi
 {
     public partial class Form1 : Form
     {
+        private readonly IIngredientsService _ingredientsService;
         private List<string> ingredientIds;
+
 
         public Form1()
         {
+            _ingredientsService = (IIngredientsService)Program.ServiceProvider.GetService(typeof(IIngredientsService));
             InitializeComponent();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+    private void label1_Click(object sender, EventArgs e)
         {
 
         }
@@ -30,8 +34,8 @@ namespace WindowsDesktopClientForApi
         {
             if (lstIngredients.Items.Count == 0)
             {
-                var ingredientsService = new HttpService();
-                var listOfIngredients = ingredientsService.GetIngredients();
+                //var ingredientsService = new IngredientsHttpService();
+                var listOfIngredients = _ingredientsService.GetIngredients();
                 ingredientIds = new List<string>();
                 try
                 {
@@ -75,8 +79,8 @@ namespace WindowsDesktopClientForApi
             var id = lstIngredients.SelectedIndex;
             string chosenIngredientId = ingredientIds[id];
 
-            var ingredientService = new HttpService();
-            var ingredient = await ingredientService.GetIngredient(chosenIngredientId);
+            //var ingredientService = new IngredientsHttpService();
+            var ingredient = await _ingredientsService.GetIngredient(chosenIngredientId);
 
 
             ingredientName.Text = ingredient.details.name;
