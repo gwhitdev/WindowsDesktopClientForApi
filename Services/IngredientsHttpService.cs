@@ -94,5 +94,25 @@ namespace WindowsDesktopClientForApi.Services
  
             return Ingredient;
         }
+
+        public async Task<string> CreateIngredient(Ingredient ingredient)
+        {
+            var url = $"Ingredients";
+            
+           
+            var json = JsonConvert.SerializeObject(ingredient);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(url, content);
+
+            response.EnsureSuccessStatusCode();
+
+            if (!response.StatusCode.Equals(201))
+            {
+                return "There has been an error";
+            }
+
+            return "201";
+                
+        }
     }
 }

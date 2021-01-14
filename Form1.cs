@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,76 +15,92 @@ namespace WindowsDesktopClientForApi
     {
         private readonly IIngredientsService _ingredientsService;
         private List<string> ingredientIds;
-
-
+        private ViewModel viewModel;
         public Form1()
         {
             _ingredientsService = (IIngredientsService)Program.ServiceProvider.GetService(typeof(IIngredientsService));
+            ViewModel viewModel = new ViewModel();
             InitializeComponent();
         }
-
-    private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
+        
         private async void btnAdd_Click(object sender, EventArgs e)
         {
-            if (lstIngredients.Items.Count == 0)
+            viewModel.UpdateIngredientsList();
+            if (lstIngredients.Items.Count > 0)
             {
-                //var ingredientsService = new IngredientsHttpService();
-                var listOfIngredients = _ingredientsService.GetIngredients();
-                ingredientIds = new List<string>();
-                try
-                {
-                    await foreach (var ingredient in listOfIngredients)
-                    {
-                        foreach (var item in ingredient)
-                        {
-                            lstIngredients.Items.Add(item.details.name);
-                            ingredientIds.Add(item.id);
-                        }
-
-                    }
-
-                }
-
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-
-                }
+                lstIngredients.Items.Clear();
             }
             
-
-            
+            var listOfIngredients = _ingredientsService.GetIngredients();
+            ingredientIds = new List<string>();
+            try
+            {
+                SetLoadingText(true);
+                await foreach (var ingredient in listOfIngredients)
+                {
+                    foreach (var item in ingredient)
+                    {
+                        lstIngredients.Items.Add(item.details.name);
+                        ingredientIds.Add(item.id);
+                    }
+                }
+            SetLoadingText(false);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+                   
         }
 
-        private void label2_Click(object sender, EventArgs e)
-        {
 
-        }
-
-        private void ingredientUseByDate_Click(object sender, EventArgs e)
-        {
-
-        }
 
         private async void lstIngredients_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
-         
+
             var id = lstIngredients.SelectedIndex;
             string chosenIngredientId = ingredientIds[id];
+            
+            try
+            {
+                SetLoadingText(true);
+                var ingredient = await _ingredientsService.GetIngredient(chosenIngredientId);
+                ingredientNameBox.Text = ingredient.details.name;
+                ingredientStoredBox.Text = ingredient.details.keptAt;
+                ingredientUseByBox.Text = ingredient.details.useByDate.ToString();
+                quanatityTypeBox.Text = ingredient.details.quantityType;
+                quantityBox.Text = ingredient.details.quantity.ToString();
+                SetLoadingText(false);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
-            //var ingredientService = new IngredientsHttpService();
-            var ingredient = await _ingredientsService.GetIngredient(chosenIngredientId);
+        }
 
+        public void SetLoadingText(bool loading)
+        {
+            if (loading == true)
+            {
+                toolStripStatusLabel1.Text = "Loading...";
+            }
+            if (loading == false)
+            {
+                toolStripStatusLabel1.Text = "";
+            }
+        }
 
-            ingredientName.Text = ingredient.details.name;
-            ingredientKeptAt.Text = ingredient.details.keptAt;
-            ingredientUseByDate.Text = ingredient.details.useByDate.ToString();
+        private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
 
+        }
+
+        private void createButton_Click(object sender, EventArgs e)
+        {
+            var createIngredientForm = new Form2();
+            createIngredientForm.Show();
+            
         }
     }
 }

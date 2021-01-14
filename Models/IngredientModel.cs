@@ -21,7 +21,7 @@ namespace WindowsDesktopClientForApi.Models
         {
             public string id { get; set; }
             public Details details { get; set; }
-            public DateTime createdAt { get; set; }
+            public DateTime createdAt { get; set; } = DateTime.Now;
             public DateTime updatedAt { get; set; }
         }
 
@@ -31,7 +31,7 @@ namespace WindowsDesktopClientForApi.Models
             public int quantity { get; set; }
             public string quantityType { get; set; }
             public string keptAt { get; set; }
-            public DateTime useByDate { get; set; }
+        public DateTime useByDate { get; set; }
         }
 
     }
