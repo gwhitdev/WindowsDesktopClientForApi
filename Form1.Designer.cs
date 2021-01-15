@@ -48,6 +48,7 @@ namespace WindowsDesktopClientForApi
             this.label6 = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.ingredientsChangedButton = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -167,6 +168,7 @@ namespace WindowsDesktopClientForApi
             this.deleteButton.TabIndex = 13;
             this.deleteButton.Text = "Delete";
             this.deleteButton.UseVisualStyleBackColor = true;
+            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
             // 
             // updateButton
             // 
@@ -222,18 +224,28 @@ namespace WindowsDesktopClientForApi
             this.statusStrip1.Size = new System.Drawing.Size(718, 22);
             this.statusStrip1.TabIndex = 19;
             this.statusStrip1.Text = "statusStrip1";
-            this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
             // 
+            // ingredientsChangedButton
+            // 
+            this.ingredientsChangedButton.Location = new System.Drawing.Point(50, 300);
+            this.ingredientsChangedButton.Name = "ingredientsChangedButton";
+            this.ingredientsChangedButton.Size = new System.Drawing.Size(69, 47);
+            this.ingredientsChangedButton.TabIndex = 20;
+            this.ingredientsChangedButton.Text = "Have Changed";
+            this.ingredientsChangedButton.UseVisualStyleBackColor = true;
+            this.ingredientsChangedButton.Click += new System.EventHandler(this.ingredientsChangedButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(718, 388);
+            this.Controls.Add(this.ingredientsChangedButton);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.quanatityTypeBox);
@@ -282,6 +294,7 @@ namespace WindowsDesktopClientForApi
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.Button ingredientsChangedButton;
     }
 }
 

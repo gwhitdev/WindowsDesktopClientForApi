@@ -14,7 +14,7 @@ namespace WindowsDesktopClientForApi
     public partial class Form2 : Form
     {
         private readonly IIngredientsService _ingredientsService;
-
+        private string FeedbackText { get; set; }
         public Form2()
         {
             InitializeComponent();
@@ -22,10 +22,8 @@ namespace WindowsDesktopClientForApi
 
         }
 
-        private async void createButton_Click(object sender, EventArgs e)
+        private async Task<string> CreateIngredient()
         {
-
-            
             var newIngredientDetails = new Details()
             {
                 name = ingredientNameBox.Text,
@@ -43,15 +41,25 @@ namespace WindowsDesktopClientForApi
                 details = newIngredientDetails
             };
 
-
             var createdIngredient = await _ingredientsService.CreateIngredient(newIngredient);
 
-            if (!createdIngredient.Equals("201"))
+            if (createdIngredient == false)
             {
-                resultText.Text = "There has been an error.";
+                FeedbackText = "There was a problem creating the ingredient.";
+                return FeedbackText;
             }
 
-            resultText.Text = "Successfully created new ingredient.";
+            FeedbackText = "New ingredient created successfully.";
+            return FeedbackText;
+            
+            
+        }
+
+        private async void createButton_Click(object sender, EventArgs e)
+        {
+            await CreateIngredient();
+            resultText.Text = FeedbackText;
+            
         }
     }
 }

@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using WindowsDesktopClientForApi.Models;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using WindowsDesktopClientForApi.Interfaces;
+using System.Net;
 /// <summary>
 ///  Creates an instance of a HttpClient to send GET requests to FamilyMeals API.
 ///  Provides a GetIngredients and GetIngredient method
@@ -95,7 +94,7 @@ namespace WindowsDesktopClientForApi.Services
             return Ingredient;
         }
 
-        public async Task<string> CreateIngredient(Ingredient ingredient)
+        public async Task<bool> CreateIngredient(Ingredient ingredient)
         {
             var url = $"Ingredients";
             
@@ -104,15 +103,28 @@ namespace WindowsDesktopClientForApi.Services
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await _client.PostAsync(url, content);
 
-            response.EnsureSuccessStatusCode();
-
-            if (!response.StatusCode.Equals(201))
+            if (response.StatusCode == HttpStatusCode.Created)
             {
-                return "There has been an error";
+                return true;
             }
 
-            return "201";
+            return false;
                 
         }
+
+        public async Task<bool> DeleteIngredient(string ingredientId)
+        {
+            var url = "Ingredients";     
+            var response = await _client.DeleteAsync($"{url}/{ingredientId}");
+                        
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
+
+    
 }

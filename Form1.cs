@@ -14,62 +14,154 @@ namespace WindowsDesktopClientForApi
     public partial class Form1 : Form
     {
         private readonly IIngredientsService _ingredientsService;
-        private List<string> ingredientIds;
-        private ViewModel viewModel;
+        public List<string> IngredientIds { get; set; } = new List<string>();
+        public string ChosenIngredientId { get; set; }
+        public List<string> IngredientNames { get; set; } = new List<string>();
+        public int SelectedIndex { get; set; }
+        public Ingredient ChosenIngredient { get; set; }
+        public bool IngredientsChanged { get; set; } = true;
+        public string ChosenName { get; set; }
         public Form1()
         {
             _ingredientsService = (IIngredientsService)Program.ServiceProvider.GetService(typeof(IIngredientsService));
-            ViewModel viewModel = new ViewModel();
+            
             InitializeComponent();
         }
-        
-        private async void btnAdd_Click(object sender, EventArgs e)
+        public static string SetLoadingText(bool loading)
         {
-            viewModel.UpdateIngredientsList();
-            if (lstIngredients.Items.Count > 0)
-            {
-                lstIngredients.Items.Clear();
-            }
+            return loading ? "Loading..." : "";
+        }
+
+        public static string SetDeletingText(bool deleting)
+        {
+            return deleting ? "Deleting..." : "";
+        }
+
+        private static string DeletingSuccessMessage(bool success, string id)
+        {
+            return success ? $"Ingredient with ID {id} was deleted." : $"Ingredient with ID {id} could not be deleted.";
+        }
+
+        private static string UpdateSuccessMessage(bool success)
+        {
+            return success ? "Ingredients list updated." : "Ingredients list not updated";
+        }
+        private void ClearTextBoxes()
+        {
+            ingredientNameBox.Clear();
+            ingredientStoredBox.Clear();
+            ingredientUseByBox.Clear();
+            quanatityTypeBox.Clear();
+            quantityBox.Clear();
+        }
+        private async Task GetListOfIngredients()
+        {
+            IAsyncEnumerable<List<Ingredient>> listOfIngredients = _ingredientsService.GetIngredients();
             
-            var listOfIngredients = _ingredientsService.GetIngredients();
-            ingredientIds = new List<string>();
-            try
+            if (IngredientsChanged)
             {
-                SetLoadingText(true);
+                toolStripStatusLabel1.Text = SetLoadingText(true);
+
                 await foreach (var ingredient in listOfIngredients)
                 {
                     foreach (var item in ingredient)
                     {
-                        lstIngredients.Items.Add(item.details.name);
-                        ingredientIds.Add(item.id);
+                        if (IngredientNames.Contains(item.details.name)) return;
+
+                        IngredientIds.Add(item.id);
+                        IngredientNames.Add(item.details.name);
                     }
                 }
-            SetLoadingText(false);
+
+                IngredientsChanged = false;
+                toolStripStatusLabel1.Text = SetLoadingText(false);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-                   
         }
 
+        private void AddIngredientNamesToListBox()
+        {
+            if (IngredientNames.Count > 0)
+            {
+                foreach (var name in IngredientNames)
+                {
+                    lstIngredients.Items.Add(name);
+                }
+            }
+        }
 
+        public async Task<string> UpdateListBoxOfIngredients()
+        {
+            if (IngredientsChanged == false && lstIngredients.Items.Count > 0 && IngredientNames.Count > 0)
+            {
+                foreach (var name in IngredientNames)
+                {
+                    if (!lstIngredients.Items.Contains(name)) lstIngredients.Items.Add(name);
+                    
+                }
+               
+            }
+            else
+            {
+                await GetListOfIngredients();
+                if (IngredientNames.Count > 0)
+                {
+                    foreach (var name in IngredientNames)
+                    {
+                        if (!lstIngredients.Items.Contains(name)) lstIngredients.Items.Remove(name);  
+                    }
+                }
+                else
+                {
+                    lstIngredients.Items.Clear();
+                }
+                
+            }
+            return toolStripStatusLabel1.Text = UpdateSuccessMessage(true);
+        }
+
+        private async Task<string> DeleteIngredient(string id)
+        {
+            toolStripStatusLabel1.Text = SetDeletingText(true);
+            var deleteIngredientResponse = await _ingredientsService.DeleteIngredient(id); // Removes selected item from DB through API
+            toolStripStatusLabel1.Text = SetDeletingText(false);
+
+            if (!deleteIngredientResponse) return DeletingSuccessMessage(false, id);
+
+            IngredientsChanged = true;
+            
+            IngredientNames.RemoveAt(SelectedIndex);
+            
+            return DeletingSuccessMessage(true, id);
+            
+        }
+
+        private async void btnAdd_Click(object sender, EventArgs e)
+        {
+            if (lstIngredients.Items.Count == 0 && IngredientNames.Count == 0)
+            {
+               await GetListOfIngredients();
+               AddIngredientNamesToListBox();
+            }
+            else
+            {
+                await UpdateListBoxOfIngredients();
+            }
+        }
 
         private async void lstIngredients_SelectedIndexChanged(object sender, EventArgs e)
         {
 
-            var id = lstIngredients.SelectedIndex;
-            string chosenIngredientId = ingredientIds[id];
+            SelectedIndex = lstIngredients.SelectedIndex; // setting the SelectedIndex property
+            ChosenName = IngredientNames[SelectedIndex];
+            ChosenIngredientId = IngredientIds[SelectedIndex];
+
+            // REFACTOR BELOW INTO STAND ALONE METHOD AND CALL HERE WITH ID
             
+
             try
             {
                 SetLoadingText(true);
-                var ingredient = await _ingredientsService.GetIngredient(chosenIngredientId);
-                ingredientNameBox.Text = ingredient.details.name;
-                ingredientStoredBox.Text = ingredient.details.keptAt;
-                ingredientUseByBox.Text = ingredient.details.useByDate.ToString();
-                quanatityTypeBox.Text = ingredient.details.quantityType;
-                quantityBox.Text = ingredient.details.quantity.ToString();
+                ChosenIngredient = await _ingredientsService.GetIngredient(ChosenIngredientId);
                 SetLoadingText(false);
             }
             catch (Exception ex)
@@ -77,22 +169,11 @@ namespace WindowsDesktopClientForApi
                 Console.WriteLine(ex.Message);
             }
 
-        }
-
-        public void SetLoadingText(bool loading)
-        {
-            if (loading == true)
-            {
-                toolStripStatusLabel1.Text = "Loading...";
-            }
-            if (loading == false)
-            {
-                toolStripStatusLabel1.Text = "";
-            }
-        }
-
-        private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
+            ingredientNameBox.Text = ChosenIngredient.details.name;
+            ingredientStoredBox.Text = ChosenIngredient.details.keptAt;
+            ingredientUseByBox.Text = ChosenIngredient.details.useByDate.ToString();
+            quanatityTypeBox.Text = ChosenIngredient.details.quantityType;
+            quantityBox.Text = ChosenIngredient.details.quantity.ToString();
 
         }
 
@@ -101,6 +182,20 @@ namespace WindowsDesktopClientForApi
             var createIngredientForm = new Form2();
             createIngredientForm.Show();
             
+        }
+
+        private async void deleteButton_Click(object sender, EventArgs e)
+        {
+            
+            toolStripStatusLabel1.Text = await DeleteIngredient(ChosenIngredientId);
+            toolStripStatusLabel1.Text = await UpdateListBoxOfIngredients();
+            ClearTextBoxes();
+        }
+
+        private void ingredientsChangedButton_Click(object sender, EventArgs e)
+        {
+            IngredientsChanged = !IngredientsChanged;
+            toolStripStatusLabel1.Text = IngredientsChanged.ToString();
         }
     }
 }

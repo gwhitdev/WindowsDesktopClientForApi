@@ -12,8 +12,8 @@ namespace WindowsDesktopClientForApi.Interfaces
         IAsyncEnumerable<List<Ingredient>> GetIngredients();
         Task<Ingredient> GetIngredient(string id);
 
-        Task<string> CreateIngredient(Ingredient ingredient);
-        //void DeleteIngredient(string Id);
+        Task<bool> CreateIngredient(Ingredient ingredient);
+        Task<bool> DeleteIngredient(string Id);
        // void UpdateIngredient(string Id);
     }
 }
